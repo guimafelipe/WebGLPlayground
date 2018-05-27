@@ -65,7 +65,9 @@ function initBuffers(gl){
 	};
 }
 
-function drawScene(gl, programInfo, buffers){
+var cubeRotation = 0.0;
+
+function drawScene(gl, programInfo, buffers, deltaTime){
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);
 	gl.clearDepth(1.0);
 	gl.enable(gl.DEPTH_TEST);
@@ -87,6 +89,7 @@ function drawScene(gl, programInfo, buffers){
 
 	const modelViewMatrix = mat4.create();
 	mat4.translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -6.0]); //Não entendi o -0.0
+	mat4.rotate(modelViewMatrix, modelViewMatrix, cubeRotation, [0,0,1]);
 
 	{
 		const numComponents = 2;
@@ -148,6 +151,8 @@ function drawScene(gl, programInfo, buffers){
 		const vertexCount = 4;
 		gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
 	}
+
+	cubeRotation += deltaTime;
 } 
 
 function main() {
@@ -198,5 +203,17 @@ function main() {
 	
 	const buffers = initBuffers(gl);
 
-	drawScene(gl, programInfo, buffers);
+	var then = 0;
+
+	function render(now){
+		now *= 0.001;
+		const deltaTime = now - then;
+		then = now;
+		drawScene(gl, programInfo, buffers, deltaTime);
+
+
+		requestAnimationFrame(render);
+	}
+
+	requestAnimationFrame(render);
 }
