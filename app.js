@@ -326,6 +326,71 @@ function isPowerOf2(value){
 	return (value & (value - 1)) == 0;
 }
 
+var copyVideo = false;
+
+function setupVideo(url){
+	const video = document.createElement('video');
+
+	var playing = false;
+	var timeupdate = false;
+
+	video.autoplay = true;
+	video.muted = false;
+	video.loop = true;
+
+	video.addEventListener('playing', function(){
+		playing = true;
+		checkReady();
+	}, true);
+
+	video.addEventListener('timeupdate', function(){
+		timeupdate = true;
+		checkReady();
+	}, true);
+
+	video.src = url;
+	video.play();
+
+	function checkReady(){
+		if(playing && timeupdate){
+			copyVideo = true;
+		}
+	}
+
+	return video;
+}
+
+function initTexture(gl){
+	const texture = gl.createTexture();
+	gl.bindTexture(gl.TEXTURE_2D, texture);
+
+	const level = 0;
+	const internalFormat = gl.RGBA;
+	const width = 1;
+	const height = 1;
+	const border = 0;
+	const srcFormat = gl.RGBA;
+	const srcType = gl.UNSIGNED_BYTE;
+	const pixel = new Uint8Array([0, 0, 255, 255]);
+
+	gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, width, height, border, srcFormat, srcType, pixel);
+
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+	
+	return texture;
+}
+
+function updateTexture(gl, texture, video){
+	const level = 0;
+	const internalFormat = gl.RGBA;
+	const srcFormat = gl.RGBA;
+	const srcType = gl.UNSIGNED_BYTE;
+	gl.bindTexture(gl.TEXTURE_2D, texture);
+	gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, video);
+}
+
 function main() {
 	const canvas = document.querySelector("#glCanvas");
 	const gl = canvas.getContext("webgl");
@@ -393,7 +458,11 @@ function main() {
 	
 	const buffers = initBuffers(gl);
 
-	const texture = loadTexture(gl, 'cubetexture.png');
+	// const texture = loadTexture(gl, 'cubetexture.png');
+
+	const texture = initTexture(gl);
+
+	const video = setupVideo('video.mp4');
 
 	var then = 0;
 
@@ -401,6 +470,11 @@ function main() {
 		now *= 0.001;
 		const deltaTime = now - then;
 		then = now;
+
+		if(copyVideo){
+			updateTexture(gl, texture, video);
+		}
+
 		drawScene(gl, programInfo, buffers, texture, deltaTime);
 
 		requestAnimationFrame(render);
