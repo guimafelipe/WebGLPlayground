@@ -183,6 +183,8 @@ function initBuffers(gl){
 }
 
 var cubeRotation = 0.0;
+var rotateTop = false;
+var topRotation = 0.0;
 
 function drawScene(gl, programInfo, buffers, texture, deltaTime){
 	gl.clearColor(1.0, 1.0, 1.0, 1.0);
@@ -205,9 +207,13 @@ function drawScene(gl, programInfo, buffers, texture, deltaTime){
 		zFar);
 
 	const modelViewMatrix = mat4.create();
-	mat4.translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -6.0]); //Não entendi o -0.0
+	mat4.translate(modelViewMatrix, modelViewMatrix, [0.0, 0.0, -6.0]);
+	mat4.rotate(modelViewMatrix, modelViewMatrix, topRotation * 1.4, [1,0,0]);
 	mat4.rotate(modelViewMatrix, modelViewMatrix, cubeRotation, [0,0,1]);
 	mat4.rotate(modelViewMatrix, modelViewMatrix, cubeRotation*0.7, [0,1,0]);
+	if(rotateTop){
+		topRotation += deltaTime;
+	}
 
 	{
 		const numComponents = 3;
@@ -465,6 +471,21 @@ function main() {
 	const video = setupVideo('video.mp4');
 
 	var then = 0;
+
+	//Adicionando event listener pra rotar o cubo
+	document.addEventListener('keydown', (event) => {
+		const code = event.keyCode;
+		if(code == 32){
+			rotateTop = true;
+		}
+	});
+	
+	document.addEventListener('keyup', (event) => {
+		const code = event.keyCode;
+		if(code == 32){
+			rotateTop = false;
+		}
+	});
 
 	function render(now){
 		now *= 0.001;
